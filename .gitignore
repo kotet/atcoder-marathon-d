@@ -1,0 +1,7 @@
+*.o
+generator
+solver
+tester
+input/
+output/
+score/
