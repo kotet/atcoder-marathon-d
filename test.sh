@@ -1,4 +1,4 @@
-INPUT_NUM=50
+INPUT_NUM=3
 
 INPUT_DIR="input/"
 OUTPUT_DIR="output/"
