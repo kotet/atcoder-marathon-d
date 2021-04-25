@@ -28,11 +28,9 @@ void main()
         P[i] = aryread();
     }
 
-    alias ST = Tuple!(long, long, long[]); // i,j,dirs
+    alias ST = Tuple!(long, long, bool[50 * 50], string, long); // i,j,visited,log,pts
 
-    auto visited = new bool[](50 * 50);
-
-    long[] dirs(long ci, long cj)
+    long[] dirs(long ci, long cj, bool[50 * 50] visited)
     {
         long[] ret;
         if (0 < ci && !visited[T[ci - 1][cj]])
@@ -55,117 +53,207 @@ void main()
         return ret;
     }
 
-    ST[50 * 50] Q;
-    long q_len;
+    DList!ST Q;
 
-    long max_pts;
-    string ans;
+    // long acc;
+    // long log_len;
 
-    long acc;
-    char[50 * 50] log;
-    long log_len;
+    // void go(long ci, long cj)
+    // {
+    //     acc += P[ci][cj];
+    //     visited[T[ci][cj]] = true;
+    //     Q[q_len++] = ST(ci, cj, dirs(ci, cj).dup);
+    //     // Q.insertFront(ST(ci, cj, dirs(ci, cj).idup));
+    // }
 
-    void go(long ci, long cj)
-    {
-        acc += P[ci][cj];
-        visited[T[ci][cj]] = true;
-        Q[q_len++] = ST(ci, cj, dirs(ci, cj).dup);
-        // Q.insertFront(ST(ci, cj, dirs(ci, cj).idup));
-    }
+    // go(si, sj);
 
-    go(si, sj);
-
-    auto last = sw.peek();
+    // auto last = sw.peek();
 
     auto now = sw.peek();
 
-    long last_iter;
     long iter;
 
-    long rewind_cnt;
+    Q.insertBack(ST(si, sj, (bool[50 * 50]).init, "", 0));
 
-    while (q_len && now < dur!"msecs"(1985))
+    long global_max_pts;
+    string global_max_ans;
+
+    long dfs(ST st)
+    {
+        long max_pts;
+        string max_ans;
+        DList!ST stack;
+        stack.insertFront(st);
+        long iter;
+        while (!stack.empty && iter < 500)
+        {
+            iter++;
+            auto cur = stack.front;
+            stack.removeFront();
+            long ci = cur[0];
+            long cj = cur[1];
+            auto visited = cur[2];
+            auto log = cur[3];
+            long pts = cur[4];
+
+            pts += P[ci][cj];
+            visited[T[ci][cj]] = true;
+            auto ds = dirs(ci, cj, visited);
+            if (max_pts < pts)
+            {
+                max_pts = pts;
+                max_ans = log;
+                if (global_max_pts < pts)
+                {
+                    global_max_pts = pts;
+                    global_max_ans = log;
+                }
+            }
+            foreach (d; ds)
+            {
+                switch (d)
+                {
+                case dir.U:
+                    stack.insertFront(ST(ci - 1, cj, visited, log ~ 'U', pts));
+                    break;
+                case dir.D:
+                    stack.insertFront(ST(ci + 1, cj, visited, log ~ 'D', pts));
+                    break;
+                case dir.L:
+                    stack.insertFront(ST(ci, cj - 1, visited, log ~ 'L', pts));
+                    break;
+                case dir.R:
+                    stack.insertFront(ST(ci, cj + 1, visited, log ~ 'R', pts));
+                    break;
+                default:
+                    assert(0);
+                }
+            }
+        }
+        return max_pts;
+    }
+
+    while (!Q.empty && now < dur!"msecs"(1985))
     {
         iter++;
-        if ((iter & ((1 << 9) - 1)) == 0)
+        now = sw.peek();
+
+        auto cur = Q.front;
+        Q.removeFront();
+        long ci = cur[0];
+        long cj = cur[1];
+        auto visited = cur[2];
+        auto log = cur[3];
+        long pts = cur[4];
+
+        pts += P[ci][cj];
+        visited[T[ci][cj]] = true;
+        auto ds = dirs(ci, cj, visited);
+        if (global_max_pts < pts)
         {
-            // writeln(iter);
-            now = sw.peek();
+            global_max_pts = pts;
+            global_max_ans = log;
         }
-
-        if (dur!"msecs"(1) < now - last)
+        auto evals = new long[](ds.length);
+        // writeln(global_max_pts);
+        if (ds.length == 0)
         {
-            // writeln(iter - last_iter, " ", acc);
-            last_iter = iter;
-            if (max_pts < acc)
-            {
-                max_pts = acc;
-                ans = log[0 .. log_len].dup;
-            }
-            rewind_cnt = uniform(log_len / 4, log_len, rand);
-            // writeln(rewind_cnt);
-            // rewind_cnt = log_len / 2;
-            // acc = 0;
-            // log_len = 0;
-            // visited[] = false;
-            // // Q.clear();
-            // q_len = 0;
-            // go(si, sj);
-            last = now;
-        }
-
-        auto st = Q[--q_len];
-        // auto st = Q.front;
-        // Q.removeFront();
-        long ci = st[0];
-        long cj = st[1];
-        auto d = st[2];
-
-        long t = T[ci][cj];
-        long p = P[ci][cj];
-
-        if (d.length == 0 || rewind_cnt)
-        {
-            if (rewind_cnt)
-                rewind_cnt--;
-            if (last)
-                acc -= p;
-            log_len--;
-            visited[t] = false;
             continue;
         }
-        Q[q_len++] = ST(ci, cj, d[1 .. $].dup);
-        // Q.insertFront(ST(ci, cj, d[1 .. $].idup));
-        switch (d[0])
+
+        foreach (i; 0 .. ds.length)
         {
-        case dir.U:
-            log[log_len++] = 'U';
-            go(ci - 1, cj);
-            break;
-        case dir.D:
-            log[log_len++] = 'D';
-            go(ci + 1, cj);
-            break;
-        case dir.L:
-            log[log_len++] = 'L';
-            go(ci, cj - 1);
-            break;
-        case dir.R:
-            log[log_len++] = 'R';
-            go(ci, cj + 1);
-            break;
-        default:
-            assert(0);
+            switch (ds[i])
+            {
+            case dir.U:
+                evals[i] = dfs(ST(ci - 1, cj, visited, log ~ 'U', pts));
+                break;
+            case dir.D:
+                evals[i] = dfs(ST(ci + 1, cj, visited, log ~ 'D', pts));
+                break;
+            case dir.L:
+                evals[i] = dfs(ST(ci, cj - 1, visited, log ~ 'L', pts));
+                break;
+            case dir.R:
+                evals[i] = dfs(ST(ci, cj + 1, visited, log ~ 'R', pts));
+                break;
+            default:
+                assert(0);
+            }
         }
+
+        zip(evals, ds).sort!"b<a"();
+
+        long k = max(1, ds.length / 2);
+
+        foreach (i; 0 .. k)
+        {
+            switch (ds[i])
+            {
+            case dir.U:
+                Q.insertBack(ST(ci - 1, cj, visited, log ~ 'U', pts));
+                break;
+            case dir.D:
+                Q.insertBack(ST(ci + 1, cj, visited, log ~ 'D', pts));
+                break;
+            case dir.L:
+                Q.insertBack(ST(ci, cj - 1, visited, log ~ 'L', pts));
+                break;
+            case dir.R:
+                Q.insertBack(ST(ci, cj + 1, visited, log ~ 'R', pts));
+                break;
+            default:
+                assert(0);
+            }
+        }
+
+        // auto st = Q[--q_len];
+        // // auto st = Q.front;
+        // // Q.removeFront();
+        // long ci = st[0];
+        // long cj = st[1];
+        // auto d = st[2];
+
+        // long t = T[ci][cj];
+        // long p = P[ci][cj];
+
+        // if (d.length == 0 && dur!"msecs"(1) < now - last)
+        // {
+        //     // writeln(iter - last_iter, " ", acc);
+        //     // last_iter = iter;
+        //     if (max_pts < acc)
+        //     {
+        //         max_pts = acc;
+        //         ans = log[0 .. log_len].dup;
+        //     }
+        //     rewind_cnt = uniform(log_len / 4, log_len, rand);
+        //     // writeln(rewind_cnt);
+        //     // rewind_cnt = log_len / 2;
+        //     // acc = 0;
+        //     // log_len = 0;
+        //     // visited[] = false;
+        //     // // Q.clear();
+        //     // q_len = 0;
+        //     // go(si, sj);
+        //     last = now;
+        // }
+
+        // if (d.length == 0 || rewind_cnt)
+        // {
+        //     if (rewind_cnt)
+        //         rewind_cnt--;
+        //     if (last)
+        //         acc -= p;
+        //     log_len--;
+        //     visited[t] = false;
+        //     continue;
+        // }
+        // Q[q_len++] = ST(ci, cj, d[1 .. $].dup);
+        // // Q.insertFront(ST(ci, cj, d[1 .. $].idup));
     }
 
-    if (max_pts < acc)
-    {
-        max_pts = acc;
-        ans = log[0 .. log_len].idup;
-    }
-
-    writeln(ans);
+    writeln(global_max_ans);
 }
 
 enum dir
