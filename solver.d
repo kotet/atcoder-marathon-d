@@ -51,69 +51,100 @@ void main()
         {
             ret ~= dir.R;
         }
-        randomShuffle(ret);
+        randomShuffle(ret, rand);
         return ret;
     }
 
-    DList!ST Q;
+    ST[50 * 50] Q;
+    long q_len;
 
     long max_pts;
-    char[] ans;
+    string ans;
 
     long acc;
-    char[] log;
+    char[50 * 50] log;
+    long log_len;
 
     void go(long ci, long cj)
     {
         acc += P[ci][cj];
         visited[T[ci][cj]] = true;
-        Q.insertFront(ST(ci, cj, dirs(ci, cj)));
+        Q[q_len++] = ST(ci, cj, dirs(ci, cj).dup);
+        // Q.insertFront(ST(ci, cj, dirs(ci, cj).idup));
     }
 
     go(si, sj);
 
-    while (!Q.empty && sw.peek() < dur!"msecs"(1950))
+    auto last = sw.peek();
+
+    auto now = sw.peek();
+
+    long last_iter;
+    long iter;
+
+    while (q_len && now < dur!"msecs"(1985))
     {
-        // writeln(acc, log);
-        auto st = Q.front;
-        Q.removeFront();
+        iter++;
+        if ((iter & ((1 << 9) - 1)) == 0)
+        {
+            // writeln(iter);
+            now = sw.peek();
+        }
+
+        if (dur!"msecs"(50) < now - last)
+        {
+            // writeln(iter - last_iter, " ", acc);
+            last_iter = iter;
+            if (max_pts < acc)
+            {
+                max_pts = acc;
+                ans = log[0 .. log_len].dup;
+            }
+            acc = 0;
+            log_len = 0;
+            visited[] = false;
+            // Q.clear();
+            q_len = 0;
+            go(si, sj);
+            last = now;
+        }
+
+        auto st = Q[--q_len];
+        // auto st = Q.front;
+        // Q.removeFront();
         long ci = st[0];
         long cj = st[1];
-        long[] d = st[2];
+        auto d = st[2];
 
         long t = T[ci][cj];
         long p = P[ci][cj];
 
-        if (max_pts < acc)
-        {
-            max_pts = acc;
-            ans = log.dup;
-        }
-
         if (d.length == 0)
         {
-            acc -= p;
-            log = log[0 .. max($ - 1, 0)];
+            if (last)
+                acc -= p;
+            log_len--;
             visited[t] = false;
             continue;
         }
-        Q.insertFront(ST(ci, cj, d[1 .. $].dup));
+        Q[q_len++] = ST(ci, cj, d[1 .. $].dup);
+        // Q.insertFront(ST(ci, cj, d[1 .. $].idup));
         switch (d[0])
         {
         case dir.U:
-            log ~= 'U';
+            log[log_len++] = 'U';
             go(ci - 1, cj);
             break;
         case dir.D:
-            log ~= 'D';
+            log[log_len++] = 'D';
             go(ci + 1, cj);
             break;
         case dir.L:
-            log ~= 'L';
+            log[log_len++] = 'L';
             go(ci, cj - 1);
             break;
         case dir.R:
-            log ~= 'R';
+            log[log_len++] = 'R';
             go(ci, cj + 1);
             break;
         default:
@@ -121,84 +152,13 @@ void main()
         }
     }
 
+    if (max_pts < acc)
+    {
+        max_pts = acc;
+        ans = log[0 .. log_len].idup;
+    }
+
     writeln(ans);
-
-    // alias Result = Tuple!(long, char[]);
-
-    // Result solve()
-    // {
-    //     long ci = si;
-    //     long cj = sj;
-
-    //     auto visited = new bool[](50 * 50);
-    //     long pts;
-    //     char[] ans;
-
-    //     while (true)
-    //     {
-    //         pts += P[ci][cj];
-    //         long t = T[ci][cj];
-    //         visited[t] = true;
-    //         long[] dirs;
-    //         if (0 < ci && !visited[T[ci - 1][cj]])
-    //         {
-    //             dirs ~= dir.U;
-    //         }
-    //         if (ci < 49 && !visited[T[ci + 1][cj]])
-    //         {
-    //             dirs ~= dir.D;
-    //         }
-    //         if (0 < cj && !visited[T[ci][cj - 1]])
-    //         {
-    //             dirs ~= dir.L;
-    //         }
-    //         if (cj < 49 && !visited[T[ci][cj + 1]])
-    //         {
-    //             dirs ~= dir.R;
-    //         }
-    //         if (dirs.length == 0)
-    //         {
-    //             return Result(pts, ans);
-    //         }
-    //         long d = dirs[uniform(0, dirs.length, rand)];
-    //         switch (d)
-    //         {
-    //         case dir.U:
-    //             ans ~= 'U';
-    //             ci--;
-    //             break;
-    //         case dir.D:
-    //             ans ~= 'D';
-    //             ci++;
-    //             break;
-    //         case dir.L:
-    //             ans ~= 'L';
-    //             cj--;
-    //             break;
-    //         case dir.R:
-    //             ans ~= 'R';
-    //             cj++;
-    //             break;
-    //         default:
-    //             assert(0);
-    //         }
-    //     }
-    // }
-
-    // long max_pts;
-    // char[] ans;
-
-    // while (sw.peek() < dur!"msecs"(1900))
-    // {
-    //     auto r = solve();
-    //     if (max_pts < r[0])
-    //     {
-    //         max_pts = r[0];
-    //         ans = r[1];
-    //     }
-    // }
-
-    // writeln(ans);
 }
 
 enum dir
