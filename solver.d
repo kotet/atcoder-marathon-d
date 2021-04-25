@@ -51,7 +51,7 @@ void main()
         {
             ret ~= dir.R;
         }
-        randomShuffle(ret, rand);
+        // randomShuffle(ret, rand);
         return ret;
     }
 
@@ -82,6 +82,8 @@ void main()
     long last_iter;
     long iter;
 
+    long rewind_cnt;
+
     while (q_len && now < dur!"msecs"(1985))
     {
         iter++;
@@ -91,7 +93,7 @@ void main()
             now = sw.peek();
         }
 
-        if (dur!"msecs"(50) < now - last)
+        if (dur!"msecs"(10) < now - last)
         {
             // writeln(iter - last_iter, " ", acc);
             last_iter = iter;
@@ -100,12 +102,15 @@ void main()
                 max_pts = acc;
                 ans = log[0 .. log_len].dup;
             }
-            acc = 0;
-            log_len = 0;
-            visited[] = false;
-            // Q.clear();
-            q_len = 0;
-            go(si, sj);
+            rewind_cnt = uniform(log_len / 4, log_len, rand);
+            // writeln(rewind_cnt);
+            // rewind_cnt = log_len / 2;
+            // acc = 0;
+            // log_len = 0;
+            // visited[] = false;
+            // // Q.clear();
+            // q_len = 0;
+            // go(si, sj);
             last = now;
         }
 
@@ -119,8 +124,10 @@ void main()
         long t = T[ci][cj];
         long p = P[ci][cj];
 
-        if (d.length == 0)
+        if (d.length == 0 || rewind_cnt)
         {
+            if (rewind_cnt)
+                rewind_cnt--;
             if (last)
                 acc -= p;
             log_len--;
