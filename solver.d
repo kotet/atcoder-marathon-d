@@ -93,7 +93,7 @@ void main()
             now = sw.peek();
         }
 
-        if (dur!"msecs"(10) < now - last)
+        if (dur!"msecs"(1) < now - last)
         {
             // writeln(iter - last_iter, " ", acc);
             last_iter = iter;
