@@ -8,6 +8,10 @@ static immutable MOD=10^^9+7;alias PQueue(T,alias l="b<a")=BinaryHeap!(Array!T,l
 
 void main()
 {
+    static import std.datetime.stopwatch;
+
+    std.datetime.stopwatch.StopWatch sw;
+    sw.start();
 
     auto rand = Mt19937_64(42);
 
@@ -86,7 +90,20 @@ void main()
         }
     }
 
-    writeln(solve()[1]);
+    long max_pts;
+    char[] ans;
+
+    while (sw.peek() < dur!"msecs"(1900))
+    {
+        auto r = solve();
+        if (max_pts < r[0])
+        {
+            max_pts = r[0];
+            ans = r[1];
+        }
+    }
+
+    writeln(ans);
 }
 
 enum dir
