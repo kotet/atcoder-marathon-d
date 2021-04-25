@@ -8,34 +8,5 @@ static immutable MOD=10^^9+7;alias PQueue(T,alias l="b<a")=BinaryHeap!(Array!T,l
 
 void main()
 {
-    // sread().writeln();
-    long D = lread();
-    auto C = aryread();
-    auto S = new long[][](D);
-    foreach (i; 0 .. D)
-    {
-        S[i] = aryread();
-    }
-    auto T = new long[](D);
-    foreach (i; 0 .. D)
-    {
-        T[i] = lread();
-    }
-    T[] -= 1;
-
-    long ans;
-    auto last = new long[](26);
-    last[] = -1;
-    foreach (d; 0 .. D)
-    {
-        // dprint(S[d], T[d]);
-        ans += S[d][T[d]];
-        last[T[d]] = d;
-        foreach (i; 0 .. 26)
-        {
-            ans -= (d - last[i]) * C[i];
-        }
-        // writeln(ans);
-    }
-    writeln(max(1_000_000 + ans, 0));
+    writeln(1);
 }

@@ -8,16 +8,91 @@ static immutable MOD=10^^9+7;alias PQueue(T,alias l="b<a")=BinaryHeap!(Array!T,l
 
 void main()
 {
-    long D = lread();
-    auto C = aryread();
-    auto S = new long[][](D);
-    foreach (i; 0 .. D)
+
+    auto rand = Mt19937_64(42);
+
+    long si, sj;
+    scan(si, sj);
+    auto T = new long[][](50);
+    foreach (i; 0 .. 50)
     {
-        S[i] = aryread();
+        T[i] = aryread();
     }
-    foreach (i; 0 .. D)
+    auto P = new long[][](50);
+    foreach (i; 0 .. 50)
     {
-        // writeln(i % 26 + 1);
-        writeln(1);
+        P[i] = aryread();
     }
+
+    alias Result = Tuple!(long, char[]);
+
+    Result solve()
+    {
+        long ci = si;
+        long cj = sj;
+
+        auto visited = new bool[](50 * 50);
+        long pts;
+        char[] ans;
+
+        while (true)
+        {
+            pts += P[ci][cj];
+            long t = T[ci][cj];
+            visited[t] = true;
+            long[] dirs;
+            if (0 < ci && !visited[T[ci - 1][cj]])
+            {
+                dirs ~= dir.U;
+            }
+            if (ci < 49 && !visited[T[ci + 1][cj]])
+            {
+                dirs ~= dir.D;
+            }
+            if (0 < cj && !visited[T[ci][cj - 1]])
+            {
+                dirs ~= dir.L;
+            }
+            if (cj < 49 && !visited[T[ci][cj + 1]])
+            {
+                dirs ~= dir.R;
+            }
+            if (dirs.length == 0)
+            {
+                return Result(pts, ans);
+            }
+            long d = dirs[uniform(0, dirs.length, rand)];
+            switch (d)
+            {
+            case dir.U:
+                ans ~= 'U';
+                ci--;
+                break;
+            case dir.D:
+                ans ~= 'D';
+                ci++;
+                break;
+            case dir.L:
+                ans ~= 'L';
+                cj--;
+                break;
+            case dir.R:
+                ans ~= 'R';
+                cj++;
+                break;
+            default:
+                assert(0);
+            }
+        }
+    }
+
+    writeln(solve()[1]);
+}
+
+enum dir
+{
+    U,
+    D,
+    L,
+    R,
 }

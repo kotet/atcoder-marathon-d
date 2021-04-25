@@ -7,7 +7,7 @@ GENERATOR_NAME="generator"
 SOLVER_NAME="solver"
 TESTER_NAME="tester"
 
-JOB_NUM=4
+JOB_NUM=5
 
 job_start () {
   local max_jobn=$1
@@ -63,7 +63,9 @@ fi
 wait
 
 generate(){
-    timeout 3 ./${GENERATOR_NAME} ${1} > "${INPUT_DIR}/${1}.txt"
+    # timeout 3 ./${GENERATOR_NAME} ${1} > "${INPUT_DIR}/${1}.txt"
+    # echo ~/Downloads/in/$(printf "%03d" "${i}").txt
+    cat ~/Downloads/in/$(printf "%04d" "${i}").txt > "${INPUT_DIR}/${1}.txt"
 }
 echo -n "Generateing Input..."
 mkdir -p ${INPUT_DIR}
